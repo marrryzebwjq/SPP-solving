@@ -8,16 +8,18 @@ using LinearAlgebra
 include("loadSPP.jl")
 include("setSPP.jl")
 include("getfname.jl")
+include("livrableEI.jl")
 
 # =========================================================================== #
 
 # Loading a SPP instance
 println("\nLoading...")
-fname = "Data/didactic.dat"
+fname = "Data/pb_100rnd0100.dat"
 C, A = loadSPP(fname)
 @show C
 @show A
-
+#Exercices
+construct(C,A)
 # Solving a SPP instance with GLPK
 println("\nSolving...")
 solverSelected = GLPK.Optimizer
