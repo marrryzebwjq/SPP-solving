@@ -1,0 +1,15 @@
+julia> nbvar, nbctr, A, C = loadInstanceSPA("rail582")
+(55515, 582, [1 1 … 0 0; 1 1 … 0 0; … ; 0 0 … 0 0; 0 0 … 0 0], [2, 2, 2, 2, 2, 2, 2, 2, 2, 2  …  2, 2, 2, 2, 2, 2, 2, 2, 2, 2], [4, 4, 4, 4, 6, 4, 6, 6, 8, 8  …  9, 10, 10, 8, 10, 8, 7, 8, 8, 6])
+
+julia> @time x, z = GreedyConstruction(C,A)
+Construction gloutonne evaluee d'une solution admissible
+ 57.893473 seconds (119.63 k allocations: 39.719 GiB, 8.97% gc time)
+([1, 0, 0, 0, 0, 0, 0, 0, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 251)
+
+julia> @time xBest, zBest = GreedyAmelioration(C, A, x, z)
+Amelioration par recherche locale de type plus profonde descente
+ > 2-1 : 
+ > 1-1 : xxxxxxxxx
+ > 0-1 : xx
+108.304481 seconds (60.69 M allocations: 271.301 GiB, 33.80% gc time)
+([1, 0, 0, 0, 0, 0, 0, 0, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 262)

@@ -8,27 +8,27 @@ using LinearAlgebra
 include("loadSPP.jl")
 include("setSPP.jl")
 include("getfname.jl")
+include("livrableEI1.jl")
 
 # =========================================================================== #
 
 # Loading a SPP instance
 println("\nLoading...")
-fname = "Data/didactic.dat"
+fname = "Data/pb_1000rnd0100.dat"
 C, A = loadSPP(fname)
-@show C
-@show A
-
+#Exercices
+construct(C,A)
 # Solving a SPP instance with GLPK
 println("\nSolving...")
 solverSelected = GLPK.Optimizer
 spp = setSPP(C, A)
 
 set_optimizer(spp, solverSelected)
-optimize!(spp)
+#optimize!(spp)
 
 # Displaying the results
-println("z = ", objective_value(spp))
-print("x = "); println(value.(spp[:x]))
+#println("z = ", objective_value(spp))
+#print("x = "); println(value.(spp[:x]))
 
 # =========================================================================== #
 
