@@ -9,15 +9,15 @@ include("loadSPP.jl")
 include("setSPP.jl")
 include("getfname.jl")
 include("livrableEI1.jl")
-
+include("livrableEI2.jl")
 # =========================================================================== #
 
 # Loading a SPP instance
 println("\nLoading...")
-fname = "Data/pb_1000rnd0100.dat"
+fname = "Data/pb_100rnd0100.dat"
 C, A = loadSPP(fname)
 #Exercices
-construct(C,A)
+GRASP(C,A)
 # Solving a SPP instance with GLPK
 println("\nSolving...")
 solverSelected = GLPK.Optimizer
@@ -33,8 +33,8 @@ set_optimizer(spp, solverSelected)
 # =========================================================================== #
 
 # Collecting the names of instances to solve
-println("\nCollecting...")
-target = "Data"
-fnames = getfname(target)
+#println("\nCollecting...")
+#target = "Data"
+#fnames = getfname(target)
 
-println("\nThat's all folks !")
+#println("\nThat's all folks !")
