@@ -66,8 +66,7 @@ function buildRCL(x,alpha,min,max)
     return limit, RCL
 end
 
-function GRASP(C,A)
-    alpha=rand((0.6,0.9))
+function GRASP(C,A,alpha)
     s=[]
     m=length(C)
     x=zeros(m)
@@ -88,9 +87,86 @@ function GRASP(C,A)
         end
     end
     x_res=copy(s[ind])
-    println(eco(C,x_res))
     return x_res
 end
 
 function reactiveGRASP(C,A)
+    sol=[]
+    sigma=3
+    pool_alpha=[]
+    n=50
+    m=9
+    res=0
+    valuation=zeros(Float64,m)
+    setAlpha=zeros(Float64,m)
+    k=0.1
+    for i in eachindex(setAlpha)
+        setAlpha[i]=k
+        k=k+0.1
+    end
+    proba=zeros(Float64,m)
+    for i in eachindex(proba)
+        proba[i]=1/m
+    end
+    for i=1:n
+        alpha=rand(setAlpha)
+        init=GRASP(C,A,alpha)
+        improved=run(A,C,init)
+        push!(sol,improved)
+        push!(sol,pool_alpha)
+        if(i%8==0)
+            for j=1:m
+                valuation[j]=((mean(C,pool_alpha)-worst(C,sol))/(best(C,sol)-worst(C,sol)))^sigma
+            end
+            for j=1:m
+                proba[j]=valuation[j]/(somme(C,valuation))
+            end
+        end
+    end
+    x_res=best(C,sol)
+    res=eco(C,x_res)
+    println("la solution de reactiveGRASP est:", res)
+    return x_res
+end
+
+function mean(C,v)
+    res=0
+    cpt=1
+    for i in eachindex(v)
+        res=res+eco(C,v[i])
+        cpt=cpt+1
+    end
+    return res/cpt
+end
+
+function worst(C,v)
+    res=0
+    tmp=0
+    for i in eachindex(v)
+        tmp=eco(C,v[i])
+        if(res>tmp)
+            res=tmp
+        end
+    end
+    return res
+end
+
+function best(C,v)
+    res=0
+    tmp=0
+    for i in eachindex(v)
+        tmp=eco(C,v[i])
+        if(res<tmp)
+            res=tmp
+        end
+    end
+    return res
+end
+
+function somme(C,v)
+    res=0
+    for i in eachindex(v)
+    res=res+eco(C,v[i])
+    end
+    return res
 end
