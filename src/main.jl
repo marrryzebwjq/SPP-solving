@@ -17,7 +17,7 @@ println("\nLoading...")
 fname = "Data/pb_100rnd0100.dat"
 C, A = loadSPP(fname)
 #Exercices
-GRASP(C,A)
+construct(C,A)
 # Solving a SPP instance with GLPK
 println("\nSolving...")
 solverSelected = GLPK.Optimizer

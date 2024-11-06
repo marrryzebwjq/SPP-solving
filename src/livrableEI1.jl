@@ -134,83 +134,197 @@ function bkp(A,x0)
     return x_res
 end
 
-function ckp(A,x0)
+"""
+result : meilleur candidat entre x et ses voisins selon un 2-1 exchange
+function kp21Exchange(x)
+"""
+function ckp(x)
+    iun = []
+    izero = []
+    # récup des indices des 0 et des 1
+    for i in x
+        i == 0 ? push!(izero,i) : push!(iun,i)
+    end
+
+    if length(iun) < 2 || length(izero) < 1 return x end
+
+    # test des voisins
+    meilleur_candidat = x;
+    meilleur_eco=eco(C,x)
+    voisin = copy(x);
+    for i=1:length(iun)
+        voisin[iun[j]] = 0; # swap 1->0
+        for j=i+1:length(iun)
+            voisin[iun[j]] = 0; # swap 1->0
+            for k=1:length(izero)
+                voisin[izero[k]] = 1; # swap 0->1
+
+                if(eco(C,voisin) > meilleur_eco && isValid(A,voisin)) # test de validité
+                    meilleur_eco = eco(C,voisin);
+                    meilleur_candidat = voisin;
+                end
+
+                voisin[izero[k]] = 0; # on remet le 0
+            end
+            voisin[iun[j]] = 1; # on remet le 1
+        end
+        voisin[iun[j]] = 1; # on remet le 1
+    end
+    return meilleur_candidat;
+end
+
+function swap(x, i)
+    x[i] = x[i]==1 ? 0 : 1;
+end
+
+# function ckp(A,x0)
+#     cp=copy(x0)
+#     x_res=copy(x0)
+#     res=eco(C,x0)
+#     m=length(x0)
+#     zeros=findall(a->a==0,x0)
+#     ones=findall(a->a==1,x0)
+#     for i=1:m
+#         cp=copy(x0)
+#         if(x0[i]==1)
+#             cp[i]=0
+#             for j=i+1:m
+#                 cp1=copy(cp)
+#                 if(j!=i)
+#                     if(cp[j]==1)                    
+#                             cp[j]=0
+#                             for k=j+1:m
+#                                 cp2=copy(cp)
+#                                  if(k!=j && k!=i && cp[k]==0)
+#                                     cp[k]=1
+#                                     if(res<eco(C,cp))
+#                                         if(isValid(A,cp))
+#                                             x_res=copy(cp)
+#                                             res=eco(C,cp)
+#                                         end
+#                                    end
+#                                end
+#                             cp=copy(cp2)
+#                         end
+#                     else
+#                         cp[j]=1
+#                         if(res<eco(C,cp))
+#                             for k=j+1:m
+#                                 cp2=copy(cp)
+#                                 if(k!=j && k!=i && cp[k]==1)
+#                                     cp[k]=0
+#                                     if(res<eco(C,cp))
+#                                         if(isValid(A,cp))
+#                                             x_res=copy(cp)
+#                                             res=eco(C,cp)
+#                                         end
+#                                     end
+#                                 end
+#                                 cp=copy(cp2)
+#                             end
+#                         end
+#                     end
+#                 end
+#                 cp=copy(cp1)
+#             end
+#         else
+#             cp[i]=1
+#             if(res<eco(C,cp))
+#                 for j=i+1:m
+#                     cp1=copy(cp)
+#                     if(j!=i)
+#                         if(cp[j]==1)
+#                             cp[j]=0
+#                             for k=j+1:m
+#                                 cp2=copy(cp)
+#                                 if(k!=j && k!=i && cp[k]==1)
+#                                     cp[k]=0
+#                                     if(res<eco(C,cp))
+#                                         if(isValid(A,cp))
+#                                             x_res=copy(cp)
+#                                             res=eco(C,cp)
+#                                         end
+#                                     end
+#                                 end
+#                                 cp=copy(cp2)
+#                             end
+#                         end
+#                     end
+#                     cp=copy(cp1)
+#                 end
+#             end
+#         end
+#     end
+#     println("la valeur de ckp est: ", res)
+#     return x_res
+# end
+
+
+function ckp0(A,x0)
     cp=copy(x0)
     x_res=copy(x0)
     res=eco(C,x0)
-    m=length(x0)
     zeros=findall(a->a==0,x0)
     ones=findall(a->a==1,x0)
-    for i=1:m
-        cp=copy(x0)
-        if(x0[i]==1)
-            cp[i]=0
-            for j=i+1:m
-                cp1=copy(cp)
+    #1er parcours de vecteur, prendre l'indice i tq et on switch
+    #copier le voisin à update au fur et a mesure
+    #verifier si eco(voisin) est plus grand que le eco(vecteur), si oui on teste sa validité, si valid on maj le max, sinon on remet le vecteur de base et on continue la recherche de voisin
+
+    for i in eachindex(zeros)
+        cp[i]=1
+            for j in eachindex(ones)
+                cp[j]=0
+                for k in eachindex(zeros)
+                    if(k!=i)
+                        cp[k]=1
+                        if(eco(C,cp)>res)
+                            if(isValid(A,cp))
+                                x_res=copy(cp)
+                                res=eco(C,cp)
+                            end
+                        end
+                        cp[k]=0
+                    end
+                end
+                cp[j]=1
+            end
+            for j in eachindex(zeros)
                 if(j!=i)
-                    if(cp[j]==1)                    
-                            cp[j]=0
-                            for k=j+1:m
-                                cp2=copy(cp)
-                                 if(k!=j && k!=i && cp[k]==0)
-                                    cp[k]=1
-                                    if(res<eco(C,cp))
-                                        if(isValid(A,cp))
-                                            x_res=copy(cp)
-                                            res=eco(C,cp)
-                                        end
-                                   end
-                               end
-                            cp=copy(cp2)
-                        end
-                    else
-                        cp[j]=1
-                        if(res<eco(C,cp))
-                            for k=j+1:m
-                                cp2=copy(cp)
-                                if(k!=j && k!=i && cp[k]==1)
-                                    cp[k]=0
-                                    if(res<eco(C,cp))
-                                        if(isValid(A,cp))
-                                            x_res=copy(cp)
-                                            res=eco(C,cp)
-                                        end
-                                    end
-                                end
-                                cp=copy(cp2)
+                    cp[j]=1
+                    for k in eachindex(ones)
+                        cp[k]=0
+                        if(eco(C,cp)>res)
+                            if(isValid(A,cp))
+                                x_res=copy(cp)
+                                res=eco(C,cp)
                             end
                         end
+                        cp[k]=1
                     end
                 end
-                cp=copy(cp1)
+                cp[j]=0
             end
-        else
-            cp[i]=1
-            if(res<eco(C,cp))
-                for j=i+1:m
-                    cp1=copy(cp)
-                    if(j!=i)
-                        if(cp[j]==1)
-                            cp[j]=0
-                            for k=j+1:m
-                                cp2=copy(cp)
-                                if(k!=j && k!=i && cp[k]==1)
-                                    cp[k]=0
-                                    if(res<eco(C,cp))
-                                        if(isValid(A,cp))
-                                            x_res=copy(cp)
-                                            res=eco(C,cp)
-                                        end
-                                    end
-                                end
-                                cp=copy(cp2)
-                            end
+        cp[i]=0
+    end
+    for i in eachindex(ones)
+        cp[i]=0
+        for j in eachindex(zeros)
+            cp[j]=1
+            for k in eachindex(zeros)
+                if(k!=j)
+                    cp[k]=1
+                    if(eco(C,cp)>res)
+                        if(isValid(A,cp))
+                            x_res=copy(cp)
+                            res=eco(C,cp)
                         end
                     end
-                    cp=copy(cp1)
+                    cp[k]=0
                 end
             end
+            cp[j]=0
         end
+        cp[i]=1
     end
     println("la valeur de ckp est: ", res)
     return x_res
