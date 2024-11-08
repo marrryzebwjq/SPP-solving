@@ -18,7 +18,9 @@ function construct(C, A)
         x0[sort_ind[j]]=1
         for i=1:m
             sum=0
-            sum=dot(A[i, :],x0)
+            for j=1:n
+                sum=sum+A[i,j]*x0[j]
+            end
             if(sum>1)
                 x0[sort_ind[j]]=0
             end
@@ -35,177 +37,130 @@ function construct(C, A)
     res=eco(C,x0)
     println("la somme nous donne:",res)
     k=2
-    start=time()
-    kp=copy(run(A,C,x0))
-    tutilise = time()-start
-    println(tutilise)
-    println(isValid(A,x0))
-    println(eco(C,x0))
-    println("la somme est vraiment:",eco(C,kp))
+    @time kp2=run(A,C,x0)
+    println("la somme est vraiment:",eco(C,kp2))
 
 end
 function run(A,C,x)
-    tmp=eco(C,x)
-    kp=copy(ckp(A,C,x))
-    tmp2=copy(x)
-    while(eco(C,kp)>tmp)
-        tmp=eco(C,kp)
-        tmp2=copy(kp)
-        kp=copy(ckp(A,C,x))
+    kp=copy(x)
+    res=eco(C,x)
+    tmp2=ckp(A,C,kp)
+    tmp=eco(C,tmp2)
+    while(tmp>res)
+        res=tmp
+        kp=copy(tmp2)
+        tmp2=ckp(A,C,kp)
+        tmp=eco(C,tmp2)
     end
-    tmp=-1
-    kp=copy(tmp2)
-    while(eco(C,kp)>tmp)
-        tmp=eco(C,kp)
-        tmp2=copy(kp)
-        kp=copy(bkp(A,C,kp))
+    tmp2=copy(kp)
+    tmp2=bkp(A,C,tmp2)
+    tmp=eco(C,tmp2)
+    while(tmp>res)
+        res=tmp
+        kp=copy(tmp2)
+        tmp2=bkp(A,C,kp)
+        tmp=eco(C,tmp2)
+
     end
-    tmp=-1
-    kp=copy(tmp2)
-    while(eco(C,kp)>tmp)
-        tmp=eco(C,kp)
-        tmp2=copy(kp)
-        kp=copy(akp(A,C,kp))
+    tmp2=copy(kp)
+    tmp2=akp(A,C,tmp2)
+    tmp=eco(C,tmp2)
+    while(tmp>res)
+        res=tmp
+        kp=copy(tmp2)
+        tmp2=akp(A,C,kp)
+        tmp=eco(C,tmp2)
     end
-    kp=copy(tmp2)
     return kp
 end
-function run2(A,C,x0)
-    return akp(A,C,akp(A,C,bkp(A,C,akp(A,C,bkp(A,C,bkp(A,C,ckp(A,C,ckp(A,C,x0))))))))
-end
+
 function eco(C,x)
     sum=0
     for i in eachindex(x)
-        sum+=C[i]*x[i]
+        sum=sum+x[i]*C[i]
     end
     return sum
 end
-function eco2(C,base,i,j,k)
-    return C[k]-C[i]-C[j]+base
-end
-function eco3(C,base,i,j)
-    return C[i]-C[j]+base
-end
-function eco4(C,base,i)
-    return C[i]+base
-end
-
 function akp(A,C,x0)
-    nb_zeros=count(a->a==0,x0)
-    zero=zeros(Int, nb_zeros)
+    zero=findall(==(0),x0)
     cp=copy(x0)
     res=eco(C,x0)
-    x_res=copy(x0)
-    it=1
     tmp=0.0
-    for i in eachindex(x0)
-        if(x0[i]==0)
-            zero[it]=i
-            it+=1
-        end
-    end
-    for i in eachindex(zero)
-        cp[zero[i]]=1
-        tmp=eco4(C,res,zero[i])
-        if(res<tmp)
-            if(isValid4(A,cp,zero[i]))
-            res=tmp
-            x_res=copy(cp)
+    for i in (zero)
+        cp=copy(x0)
+        cp[i]=1
+        tmp=res+C[i]
+            if(isValid2(A,cp,i))
+                res=tmp
+                x0=copy(cp)
             end
-        end
-        cp[zero[i]]=0
+        tmp=res
     end
-    println("la valeur de akp est: ", res)
-    return x_res
+    println("la valeur de akp est: ", eco(C,x0))
+    return x0
 end
+
 
 function bkp(A,C,x0)
     cp=copy(x0)
-    nb_zeros=count(a->a==0,x0)
-    nb_ones=count(a->a==1,x0)
-    zero=zeros(Int, nb_zeros)
-    one=ones(Int, nb_ones)
+    one=findall(==(1),x0)
+    zero=findall(==(0),x0)
     x_res=copy(x0)
     res=eco(C,x0)
-    tmp=0.0
-    it1=1
-    it2=1
-    for i in eachindex(x0)
-        if(x0[i]==1)
-            one[it1]=i
-            it1+=1
-        else
-            zero[it2]=i 
-            it2+=1
-        end
-    end
+    tmp=0.0    
     for i in eachindex(zero)
         cp[zero[i]]=1
             for k in eachindex(one)
                 cp[one[k]]=0
-                tmp=eco3(C,res,zero[i],one[k])
-                if(res<(tmp) && isValid3(A,cp,zero[i],one[k]))
+                tmp=res+C[zero[i]]-C[one[k]]
+                if(res<tmp)
+                if(isValid2(A,cp,zero[i]))
                     x_res=copy(cp)
-                    res=tmp
+                end
                 end
                 cp[one[k]]=1
+                res=tmp
+
             end
         cp[zero[i]]=0
     end
-    println("valeur de bkp ", res)
+    println("valeur de bkp ", eco(C,x_res))
     return x_res
 end
+
+
 
 function ckp(A,C,x0)
     cp=copy(x0)
     x_res=copy(x0)
     res=eco(C,x0)
-    nb_zeros=count(a->a==0,x0)
-    nb_ones=count(a->a==1,x0)
-    one=ones(Int,nb_ones)
-    zero=zeros(Int,nb_zeros)
-    it1=1
-    it2=1
+    one=findall(==(1),x0)
+    zero=findall(==(0),x0)
     tmp=0.0
-    for i in eachindex(x0)
-        if(x0[i]==1)
-            one[it1]=i
-            it1+=1
-        else
-            zero[it2]=i 
-            it2+=1
-        end
-    end
     for i in eachindex(one)
         cp[one[i]]=0
         for j=i+1:length(one)
             cp[one[j]]=0
             for k in eachindex(zero)
                 cp[zero[k]]=1
-                tmp=eco2(C,res,one[i],one[j],zero[k])
-                if(isValid2(A,cp,one[i],one[j],zero[k]) && res<tmp)
+                tmp=res+C[zero[k]]-C[one[i]]-C[one[j]]
+                if(res<tmp)
+                if(isValid2(A,cp,zero[k]))
                     x_res=copy(cp)
                     res=tmp
-                    println("Ã©change ", one[i]," ", one[j], " ", zero[k])
+                    #println("échange ", one[i]," ", one[j], " ", zero[k])
+                end
                 end
                 cp[zero[k]]=0
+                tmp=res
             end
             cp[one[j]]=1
         end
         cp[one[i]]=1
     end
-    println("la valeur de ckp est: ", res)
+    #println("la valeur de ckp est: ", eco(C,x_res))
     return x_res
 end
-
-function max(x1,x2)
-    if(x1>x2)
-        return x1
-    else
-        return x2
-    end
-end
-
 function isValid(A,x)
     m,n= size(A)
     sum=0
@@ -213,7 +168,7 @@ function isValid(A,x)
         sum=0
         for j=1:n
             if(x[j]==1 && A[i,j]==1)
-                sum+=1
+                sum=1+sum
                 if(sum>1)
                     return false
                 end
@@ -223,45 +178,16 @@ function isValid(A,x)
     return true
 end
 
-function isValid2(A,x,i,j,k)
-    m,n = size(A)
-    sum=0
-    for a=1:m 
-        sum=0
-        if(A[a,i]==0 && A[a,j]==0 && A[a,k]==1)
-            sum=dot(A[a,:],x)
-            if(sum>1)
-                return false
-            end
-        end
-    end
-    return true
-end
-
-function isValid3(A,x,i,k)
-    m,n = size(A)
-    sum=0
-    for a=1:m 
-        sum=0
-        if(A[a,k]==0 && A[a,i]==1)
-            sum=dot(A[a,:],x)
-            if(sum>1)
-                return false
-            end
-        end
-    end
-    return true
-end
-
-function isValid4(A,x,i)
+function isValid2(A,x,i)
     m,n = size(A)
     sum=0
     for a=1:m 
         sum=0
         if(A[a,i]==1)
-            sum=dot(A[a,:],x)
-            if(sum>1)
-                return false
+            for b=1:n
+                if(b!=i && x[b]==1 && A[a,b]==1)
+                    return false
+                end
             end
         end
     end
